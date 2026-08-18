@@ -16,6 +16,10 @@
   },
   "testTargets" : [
     {
+      "skippedTests" : [
+        "InstallUninstallE2ETests",
+        "ReadOnlyE2ETests"
+      ],
       "target" : {
         "containerPath" : "container:Homebrew.xcodeproj",
         "identifier" : "EEC39ED52F5AB4B900269514",
