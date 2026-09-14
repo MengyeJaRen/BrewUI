@@ -101,7 +101,8 @@ public struct LoginShellBrewCommandRunner: BrewCommandRunning {
 private final class LoginShellStartupGate: @unchecked Sendable {
     private let lock = NSLock()
     private let marker: String
-    private var admitting = false
+    private var admittingStdout = false
+    private var admittingStderr = false
 
     init(marker: String) {
         self.marker = marker
@@ -110,11 +111,22 @@ private final class LoginShellStartupGate: @unchecked Sendable {
     func admit(_ line: BrewCommandOutputLine) -> BrewCommandOutputLine? {
         lock.lock()
         defer { lock.unlock() }
+        let admitting = switch line.stream {
+        case .stdout:
+            admittingStdout
+        case .stderr:
+            admittingStderr
+        }
         if admitting {
             return line
         }
         if line.text == marker {
-            admitting = true
+            switch line.stream {
+            case .stdout:
+                admittingStdout = true
+            case .stderr:
+                admittingStderr = true
+            }
         }
         return nil
     }
