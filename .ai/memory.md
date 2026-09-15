@@ -671,3 +671,7 @@
 - Keep the PR template short. Request validation appropriate to Swift and UI changes, with actual results and any checks not run.
 - `check-issues.yml` and `check-prs.yml` adapt Homebrew/brew's template enforcement and use the shared `Homebrew/.github` checker. They read templates from `main` through the API without checking out code, close stripped templates and reopen only submissions closed by this automation. The checker requires at least 75% of template headings/checkboxes, regardless of tick state, plus an AI mention for PRs. Legacy app-generated crash reports remain accepted.
 - Template warning comments mark unresolved failures and are removed once the template is complete, after any required reopen succeeds. Clear them for already-open submissions too: the stale workflow shares `github-actions[bot]`, so a historical warning cannot identify which workflow performed a later closure.
+
+## 2026-09-15 — Before and after PR screenshots
+
+- The PR template requires before and after screenshots for visible changes, with a comparison table. Changes with no visual impact must explain why screenshots do not apply.
