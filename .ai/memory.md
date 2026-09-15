@@ -675,3 +675,21 @@
 ## 2026-09-15 — Before and after PR screenshots
 
 - The PR template requires before and after screenshots for visible changes, with a comparison table. Changes with no visual impact must explain why screenshots do not apply.
+
+## 2026-09-15 — Homebrew uses isolated system zsh
+
+- Supersedes the login-shell policy from 2026-06-23 and 2026-09-09. `ZshBrewCommandRunner` always launches `/bin/zsh --no-rcs --no-global-rcs` with an explicit environment. Login-shell discovery and startup-output filtering are removed.
+- `PATH` contains the located brew executable's directory followed by `/usr/bin:/bin`. Identity, home and temporary directories come from Foundation; shell exports, including `HOMEBREW_*` and `XDG_CONFIG_HOME`, are not inherited. Homebrew loads user settings from `brew.env` itself. The README and Configuration tab explain migration and relaunching after edits because the API-mode probe is cached.
+- Stock zsh always executes `/etc/zshenv`. A second `env -i` after startup clears its exports before brew. Both environment assignments and brew arguments travel as literal argv, never interpolated shell code. App-owned output controls and explicit fixture variables are retained.
+- Self-upgrades use the same runner by default; the handoff no longer carries a shell-selection flag. Deterministic UI tests still invoke the fake executable directly to inherit their fixture environment.
+- Live E2E launch variables no longer configure the app. CI writes the deterministic settings into `~/.homebrew/brew.env` on its ephemeral runner; manual-run guidance is in `BrewUITests/E2E/README.md`. Never run the live suite unasked.
+
+## 2026-09-15 — Filter unavoidable zsh startup output
+
+- Restores startup-output filtering for `/etc/zshenv`: clearing its exports cannot prevent banners from corrupting JSON or appearing in the console. A per-run marker gates each live stream and trims buffered output, with a leading newline to separate unterminated banners.
+- Detect the actual terminal in zsh when emitting markers so allocation fallback marks both pipes. Retain startup diagnostics if the shell exits before emitting a marker. Tests simulate startup at the runner boundary without editing system files.
+
+## 2026-09-15 — Drain terminal output before closing the replica
+
+- Darwin discards unread terminal output when the last replica descriptor closes. `BrewCommandService` must keep its replica open until draining finishes, including cancellation and launch failure. Close both descriptors in one `defer`; finish the drain only after a quiet poll that began after child exit.
+- The regression test holds the output observer until the child is reaped, then checks buffered and streamed stdout/stderr. This reproduces the output loss without depending on CI scheduling or adding a production test hook.
