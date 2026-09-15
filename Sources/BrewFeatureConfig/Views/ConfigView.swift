@@ -65,6 +65,10 @@ struct ConfigView: View {
     private func loadedCards(snapshot: BrewConfigSnapshot) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: BrewSpacing.lg) {
+                NoteCallout("""
+                Homebrew settings are read from brew.env files. Shell profiles and exported variables are ignored. \
+                Put user settings in ~/.homebrew/brew.env, then relaunch BrewUI.
+                """, tone: .info)
                 ForEach(viewModel.sections(for: snapshot)) { section in
                     ConfigSectionCard(section: section)
                 }
