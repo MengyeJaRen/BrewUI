@@ -204,6 +204,33 @@ struct LoginShellBrewCommandRunnerTests {
         #expect(collector.all == ["==> Installing wget"])
     }
 
+    @Test func `run filters startup markers independently from stdout and stderr`() async throws {
+        let collector = LineCollector()
+        let recorder = InvocationRecorder(
+            linesToEmit: [
+                BrewCommandOutputLine(stream: .stderr, text: "stderr startup"),
+                BrewCommandOutputLine(stream: .stdout, text: "stdout startup"),
+                BrewCommandOutputLine(stream: .stderr, text: "MARK"),
+                BrewCommandOutputLine(stream: .stdout, text: "MARK"),
+                BrewCommandOutputLine(stream: .stdout, text: "Your system is ready to brew."),
+                BrewCommandOutputLine(stream: .stderr, text: "real warning"),
+            ],
+        )
+        let wrapped = LoginShellBrewCommandRunner(
+            underlying: recorder,
+            shellResolver: LoginShellResolver(lookup: { URL(fileURLWithPath: "/bin/zsh") }),
+            makeMarker: { "MARK" },
+        )
+
+        _ = try await wrapped.run(
+            executableURL: URL(fileURLWithPath: "/opt/homebrew/bin/brew"),
+            arguments: ["doctor"],
+            options: BrewRunOptions(lineObserver: { collector.append($0.text) }, output: .pipes(forceColor: true)),
+        )
+
+        #expect(collector.all == ["Your system is ready to brew.", "real warning"])
+    }
+
     @Test func `run returns the underlying CommandOutput verbatim`() async throws {
         let expected = CommandOutput(
             standardOutput: "ok",
